@@ -3,7 +3,9 @@
   const A4 = {w:210,h:297};
   const PT = 0.3528; // mm por punto
   const STORAGE_KEY = 'hojas-wireframe:state';
+  const PNG_DPI = 200;
   const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const mmToPx = (mm)=>Math.round(mm * PNG_DPI / 25.4);
   const slugify = (s)=>(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 
   const palettes = {
@@ -234,7 +236,7 @@
 
   /* ---------- Render SVG ---------- */
   function toSVG(ops,W,H){
-    const out=[`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Vista previa de la hoja A4"><rect width="${W}" height="${H}" fill="#fff"/>`];
+    const out=[`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}mm" height="${H}mm" role="img" aria-label="Vista previa de la hoja A4"><rect width="${W}" height="${H}" fill="#fff"/>`];
     const f=(n)=>+n.toFixed(3);
     for(const o of ops){
       if(o.t==='rect'){
@@ -301,6 +303,7 @@
   }
   function disableDownloads(){
     $('#dlOne').disabled = true; $('#dlBoth').disabled = true;
+    $('#dlSVG').disabled = true; $('#dlPNG').disabled = true;
     setStatus('La descarga no está disponible en esta vista.');
   }
   function setStatus(t){ $('#status').textContent = t; }
@@ -309,6 +312,63 @@
   function kindLabel(kind){
     if(kind!=='custom') return KIND_LABEL[kind];
     return slugify(state.custom.name) || 'personalizado';
+  }
+
+  async function saveBlob(filename, blob){
+    if(standalone){
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      setStatus('Descargado.');
+      return;
+    }
+    if(!downloads){ disableDownloads(); return; }
+    try{
+      await downloads.save({filename, data: blob});
+      setStatus('Descargado.');
+    }catch(e){
+      const c = e && e.code;
+      if(c==='declined') setStatus('Descarga cancelada.');
+      else if(c==='rate_limited') setStatus('Ya hay una descarga pendiente. Confírmala o espera un momento.');
+      else disableDownloads();
+    }
+  }
+
+  function currentSheetSVG(){
+    const {ops,L} = sheetOps(state.sheet, state, 0);
+    return { svg: toSVG(ops, L.W, L.H), W:L.W, H:L.H };
+  }
+
+  async function downloadSVG(){
+    const {svg} = currentSheetSVG();
+    const blob = new Blob([svg], {type:'image/svg+xml'});
+    const slug = slugify(state.project) || 'wireframes';
+    await saveBlob(`${slug}-${kindLabel(state.sheet)}.svg`, blob);
+  }
+
+  async function downloadPNG(){
+    const {svg, W, H} = currentSheetSVG();
+    const pxW = mmToPx(W), pxH = mmToPx(H);
+    const svgBlob = new Blob([svg], {type:'image/svg+xml;charset=utf-8'});
+    const url = URL.createObjectURL(svgBlob);
+    try{
+      const img = new Image();
+      await new Promise((resolve,reject)=>{ img.onload=resolve; img.onerror=reject; img.src=url; });
+      const canvas = document.createElement('canvas');
+      canvas.width = pxW; canvas.height = pxH;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,pxW,pxH);
+      ctx.drawImage(img,0,0,pxW,pxH);
+      const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
+      const slug = slugify(state.project) || 'wireframes';
+      await saveBlob(`${slug}-${kindLabel(state.sheet)}.png`, blob);
+    }catch(e){
+      setStatus('No se pudo generar el PNG.');
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   }
 
   async function download(kinds){
@@ -331,6 +391,8 @@
   }
   $('#dlOne').addEventListener('click',()=>download([state.sheet]));
   $('#dlBoth').addEventListener('click',()=>download(['mobile','desktop']));
+  $('#dlSVG').addEventListener('click',downloadSVG);
+  $('#dlPNG').addEventListener('click',downloadPNG);
 
   /* ---------- UI ---------- */
   function syncControls(){
