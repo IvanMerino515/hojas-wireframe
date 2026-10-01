@@ -9,9 +9,10 @@
   const slugify = (s)=>(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 
   const palettes = {
-    gray: {frame:'#7d8388', soft:'#a7adb2', grid:'#c9cdd0', text:'#8b9196', fill:'#7d8388'},
+    gray: {frame:'#454b4f', soft:'#6b7378', grid:'#9aa1a6', text:'#454b4f', fill:'#454b4f'},
     blue: {frame:'#5c9fd6', soft:'#8dbde4', grid:'#bcd8ef', text:'#5c9fd6', fill:'#5c9fd6'}
   };
+  const LW = 1.5; // multiplicador de grosor de línea, para sobrevivir a impresoras en modo borrador
 
   // Ajustes por tipo de hoja + comunes
   const state = {
@@ -126,16 +127,16 @@
       const fx = x + w*a, fe = x + w*b;
       ops.push({t:'text',x:fx,y,s:lab,size:7,color:pal.text});
       const lx = fx + lab.length*7*PT*0.56 + 1.5;
-      ops.push({t:'line',x1:lx,y1:y+0.8,x2:fe,y2:y+0.8,stroke:pal.soft,lw:0.2});
+      ops.push({t:'line',x1:lx,y1:y+0.8,x2:fe,y2:y+0.8,stroke:pal.soft,lw:(0.2)*LW});
       if(val) ops.push({t:'text',x:lx+1,y:y-0.3,s:val,size:9,color:'#333b41'});
     });
-    ops.push({t:'line',x1:x,y1:L.m+11.5,x2:x+w,y2:L.m+11.5,stroke:pal.grid,lw:0.2});
+    ops.push({t:'line',x1:x,y1:L.m+11.5,x2:x+w,y2:L.m+11.5,stroke:pal.grid,lw:(0.2)*LW});
   }
 
   function drawLabel(ops,x,y,w,n,pal){
     const by = y + 5.6;
     ops.push({t:'text',x,y:by,s:String(n).padStart(2,'0'),size:7,color:pal.text,bold:true});
-    ops.push({t:'line',x1:x+5.5,y1:by+0.6,x2:x+w,y2:by+0.6,stroke:pal.soft,lw:0.2});
+    ops.push({t:'line',x1:x+5.5,y1:by+0.6,x2:x+w,y2:by+0.6,stroke:pal.soft,lw:(0.2)*LW});
   }
 
   // Extensión horizontal de un rect redondeado a la altura yy
@@ -158,7 +159,7 @@
         const px=ox+i*step, py=oy+j*step;
         const [a,b]=span(x,y,w,h,r,py);
         if(px>a+0.6 && px<b-0.6 && py>y+0.6 && py<y+h-0.6)
-          ops.push({t:'circle',x:px,y:py,r:0.2,fill:pal.grid});
+          ops.push({t:'circle',x:px,y:py,r:0.2*LW,fill:pal.grid});
       }
     } else if(bg==='grid'){
       const nx=Math.floor(w/step), ny=Math.floor(h/step);
@@ -166,12 +167,12 @@
       for(let j=0;j<=ny;j++){
         const py=oy+j*step; if(py<=y+0.3||py>=y+h-0.3) continue;
         const [a,b]=span(x,y,w,h,r,py);
-        ops.push({t:'line',x1:a,y1:py,x2:b,y2:py,stroke:pal.grid,lw:0.1});
+        ops.push({t:'line',x1:a,y1:py,x2:b,y2:py,stroke:pal.grid,lw:(0.1)*LW});
       }
       for(let i=0;i<=nx;i++){
         const px=ox+i*step; if(px<=x+0.3||px>=x+w-0.3) continue;
         const [a,b]=vspan(x,y,w,h,r,px);
-        ops.push({t:'line',x1:px,y1:a,x2:px,y2:b,stroke:pal.grid,lw:0.1});
+        ops.push({t:'line',x1:px,y1:a,x2:px,y2:b,stroke:pal.grid,lw:(0.1)*LW});
       }
     }
   }
@@ -184,17 +185,17 @@
     if(cfg.chrome){
       // botones laterales
       const o=0.7;
-      ops.push({t:'line',x1:x+w+o,y1:y+h*0.24,x2:x+w+o,y2:y+h*0.34,stroke:pal.frame,lw:0.6});
-      ops.push({t:'line',x1:x-o,y1:y+h*0.20,x2:x-o,y2:y+h*0.25,stroke:pal.frame,lw:0.6});
-      ops.push({t:'line',x1:x-o,y1:y+h*0.27,x2:x-o,y2:y+h*0.32,stroke:pal.frame,lw:0.6});
+      ops.push({t:'line',x1:x+w+o,y1:y+h*0.24,x2:x+w+o,y2:y+h*0.34,stroke:pal.frame,lw:(0.6)*LW});
+      ops.push({t:'line',x1:x-o,y1:y+h*0.20,x2:x-o,y2:y+h*0.25,stroke:pal.frame,lw:(0.6)*LW});
+      ops.push({t:'line',x1:x-o,y1:y+h*0.27,x2:x-o,y2:y+h*0.32,stroke:pal.frame,lw:(0.6)*LW});
     }
-    ops.push({t:'rect',x,y,w,h,r:R,stroke:pal.frame,lw:0.35});
-    ops.push({t:'rect',x:sx,y:sy,w:sw,h:sh,r:sr,stroke:pal.soft,lw:0.2});
+    ops.push({t:'rect',x,y,w,h,r:R,stroke:pal.frame,lw:(0.35)*LW});
+    ops.push({t:'rect',x:sx,y:sy,w:sw,h:sh,r:sr,stroke:pal.soft,lw:(0.2)*LW});
     if(cfg.chrome){
       const iw=w*0.27, ih=w*0.075;
       ops.push({t:'rect',x:x+(w-iw)/2,y:sy+w*0.03,w:iw,h:ih,r:ih/2,fill:pal.fill});
       const hw=w*0.32;
-      ops.push({t:'line',x1:x+(w-hw)/2,y1:sy+sh-w*0.04,x2:x+(w+hw)/2,y2:sy+sh-w*0.04,stroke:pal.frame,lw:Math.max(0.4,w*0.009),cap:true});
+      ops.push({t:'line',x1:x+(w-hw)/2,y1:sy+sh-w*0.04,x2:x+(w+hw)/2,y2:sy+sh-w*0.04,stroke:pal.frame,lw:Math.max(0.4,w*0.009)*LW,cap:true});
     }
   }
 
@@ -206,19 +207,19 @@
       const m=w*0.05, g=w*0.016, colW=(w-2*m-11*g)/12;
       for(let i=0;i<12;i++){
         const a=cx+m+i*(colW+g);
-        ops.push({t:'line',x1:a,y1:cy+0.4,x2:a,y2:cy+ch-0.4,stroke:pal.grid,lw:0.12,dash:[0.8,0.8]});
-        ops.push({t:'line',x1:a+colW,y1:cy+0.4,x2:a+colW,y2:cy+ch-0.4,stroke:pal.grid,lw:0.12,dash:[0.8,0.8]});
+        ops.push({t:'line',x1:a,y1:cy+0.4,x2:a,y2:cy+ch-0.4,stroke:pal.grid,lw:(0.12)*LW,dash:[0.8,0.8]});
+        ops.push({t:'line',x1:a+colW,y1:cy+0.4,x2:a+colW,y2:cy+ch-0.4,stroke:pal.grid,lw:(0.12)*LW,dash:[0.8,0.8]});
       }
     } else {
       drawBackground(ops,cx,cy,w,ch,cfg.chrome?0:R,cfg.bg,pal, w>150?5:4);
     }
-    ops.push({t:'rect',x,y,w,h,r:R,stroke:pal.frame,lw:0.35});
+    ops.push({t:'rect',x,y,w,h,r:R,stroke:pal.frame,lw:(0.35)*LW});
     if(cfg.chrome){
-      ops.push({t:'line',x1:x,y1:y+barH,x2:x+w,y2:y+barH,stroke:pal.frame,lw:0.25});
+      ops.push({t:'line',x1:x,y1:y+barH,x2:x+w,y2:y+barH,stroke:pal.frame,lw:(0.25)*LW});
       const cr=barH*0.13;
-      for(let i=0;i<3;i++) ops.push({t:'circle',x:x+barH*0.6+i*barH*0.45,y:y+barH/2,r:cr,stroke:pal.frame,lw:0.2});
+      for(let i=0;i<3;i++) ops.push({t:'circle',x:x+barH*0.6+i*barH*0.45,y:y+barH/2,r:cr,stroke:pal.frame,lw:(0.2)*LW});
       const uh=barH*0.56;
-      ops.push({t:'rect',x:x+w*0.2,y:y+(barH-uh)/2,w:w*0.6,h:uh,r:uh/2,stroke:pal.soft,lw:0.2});
+      ops.push({t:'rect',x:x+w*0.2,y:y+(barH-uh)/2,w:w*0.6,h:uh,r:uh/2,stroke:pal.soft,lw:(0.2)*LW});
     }
   }
 
@@ -228,9 +229,9 @@
     const R = Math.max(1, w*0.02);
     const cx=x, cy=y+barH, cw=w, ch=h-barH;
     drawBackground(ops,cx,cy,cw,ch,cfg.chrome?0:R,cfg.bg==='cols'?'dots':cfg.bg,pal, w>120?5:4);
-    ops.push({t:'rect',x,y,w,h,r:R,stroke:pal.frame,lw:0.35});
+    ops.push({t:'rect',x,y,w,h,r:R,stroke:pal.frame,lw:(0.35)*LW});
     if(cfg.chrome){
-      ops.push({t:'line',x1:x,y1:y+barH,x2:x+w,y2:y+barH,stroke:pal.frame,lw:0.25});
+      ops.push({t:'line',x1:x,y1:y+barH,x2:x+w,y2:y+barH,stroke:pal.frame,lw:(0.25)*LW});
     }
   }
 
