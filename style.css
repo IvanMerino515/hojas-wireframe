@@ -39,12 +39,15 @@ aside{
   background:var(--panel);border-right:1px solid var(--line);
   padding:28px 26px 32px;display:flex;flex-direction:column;gap:22px;
 }
-h1{
-  font-family:"Bricolage Grotesque","Instrument Sans",sans-serif;
-  font-weight:700;font-size:30px;line-height:1.02;letter-spacing:-.02em;margin:0;
+.brand-logo{display:block;height:36px;width:auto}
+.brand-logo--dark{display:none}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .brand-logo--light{display:none}
+  :root:not([data-theme="light"]) .brand-logo--dark{display:block}
 }
-h1 span{display:block;color:var(--blue)}
-.lede{margin:8px 0 0;color:var(--muted);font-size:14px;max-width:34ch}
+:root[data-theme="dark"] .brand-logo--light{display:none}
+:root[data-theme="dark"] .brand-logo--dark{display:block}
+.lede{margin:12px 0 0;color:var(--muted);font-size:14px;max-width:34ch}
 fieldset{border:0;margin:0;padding:0;min-width:0}
 legend,.lbl{
   font-weight:600;font-size:13px;margin-bottom:8px;padding:0;display:block;
