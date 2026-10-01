@@ -9,7 +9,7 @@
   const slugify = (s)=>(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 
   const palettes = {
-    gray: {frame:'#454b4f', soft:'#6b7378', grid:'#6b7378', text:'#454b4f', fill:'#454b4f'},
+    gray: {frame:'#000000', soft:'#333333', grid:'#333333', text:'#000000', fill:'#000000'},
     blue: {frame:'#5c9fd6', soft:'#8dbde4', grid:'#8dbde4', text:'#5c9fd6', fill:'#5c9fd6'}
   };
   const LW = 1.9; // multiplicador de grosor de línea, para sobrevivir a impresoras en modo borrador/B&N
